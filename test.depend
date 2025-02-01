@@ -1,12 +1,11 @@
 # depslib dependency file v1.0
-1738417215 source:c:\users\kaniz\onedrive\desktop\test\main.cpp
+1738436052 source:c:\users\kaniz\onedrive\desktop\test\main.cpp
 	<windows.h>
 	<GL/glut.h>
 	<GL/gl.h>
 	<math.h>
 	<stdio.h>
 	<string.h>
-	<windows.h>
 
 1706582920 c:\users\kaniz\onedrive\desktop\codeblocks-17.12mingw-nosetup\mingw\include\windows.h
 	<winresrc.h>

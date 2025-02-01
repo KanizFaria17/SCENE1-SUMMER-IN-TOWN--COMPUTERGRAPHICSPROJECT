@@ -677,7 +677,7 @@ void truck() //O128
     glVertex2d(-105 +tx, -70);//V8
     glEnd();
 
-    // Truck wheels
+    //Truck wheels
     glColor3ub(0, 0, 0);
     round(13, 13, -167 +tx, -120); //F9
     round(13, 13, -107 +tx, -120);
