@@ -4,36 +4,15 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
-
-void init(void);
-void circle(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy);
-void round(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy);
-void Bushes(void);
-void road(void);
-void buildings(void);
-void sun(void);
-void tree(void);
-void clouds(void);
-void aeroplane(void);
-void car(void);
-void truck(void);
-void roadLight(void);
-void roadLight2(void);
-void bench(void);
-void display(void);
-void mouse(int button, int state, int x, int y);
-void keyboard(unsigned char key, int x, int y);  // Keyboard interaction function
-void transitionToDay(void);
-void transitionToNight(void);
-void updateSkyColor(int value);
 
 
+//Declaring variables with initial values
 float  tx = 10, rx = 10;
 
 float sunAngle = 0.0f;  // Sun's current rotation angle
 float cloudX = -160;  // Initial horizontal position of the clouds
 
+float airplaneX = -200;
 
 float roadLightStatus = 1; // 1 means ON, 0 means OFF
 float roadLight2Status = 1; // 1 means ON, 0 means OFF
@@ -44,6 +23,64 @@ float targetBackgroundColor[3] = {0.0, 0.9, 0.9};  // Target color for transitio
 float transitionStep = 0.0;  // for smooth transitions
 bool transitioning = false;
 bool isDay = true;  // Initially it's day
+
+void init(void);
+void circle(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy);
+void round(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy);
+
+//Declaring draw functions
+void bushes(void);  //O101
+void flowers(void);  //O102
+void greenary(void); //O103
+
+void road (void); //O104
+void roadBlock1(void); //O105
+void roadBlock2(void); //O106
+void roadBlock3(void); //O107
+void roadBlock4(void); //O108
+void roadBlock5(void); //O109
+void roadBlock6(void); //O110
+void roadBlock7(void); //O111
+
+void building1(void); //O112
+void building2(void); //O113
+void building3(void); //O114
+void building4(void); //O115
+void building5(void); //O116
+void building6(void); //O117
+void building7(void); //O118
+void building8(void); //O119
+
+void sun(void); //O120
+void tree(void); //O121
+void tree2(void); //O122
+void tree3(void); //O123
+void cloud1(void); //O124
+void cloud2(void); //O125
+void aeroplane(void); //O126
+void car(void); //O127
+void truck(void); //O128
+void roadLight(void); //O129
+void roadLight2(void); //O130
+void bench(void); //O131
+
+void display(void);
+
+//Declaring Mouse_Keyboard functions
+void mouse(int button, int state, int x, int y);
+void keyboard(unsigned char key, int x, int y);  // Keyboard interaction function
+
+//Transition functions
+void updateSkyColor(int value); //A101
+void transitionToDay(void); //A102
+void transitionToNight(void); //A103
+void updateSunPosition(int value); //A104
+void updateCloudPosition(int value); //A105
+void updateAeroplanePosition(int value); //A106
+void updateCarPosition(int value); //A107
+void updateTruckPosition(int value); //A108
+int isPointInsideRoadLight(float x, float y, float lightX, float lightY, float radius); //A109
+
 
 void circle(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy)
 {
@@ -73,23 +110,98 @@ void round(GLfloat rx, GLfloat ry, GLfloat cx, GLfloat cy)
     glEnd();
 }
 
-void Bushes()
+//Implementing mouse-keyboard function
+void mouse(int button, int state, int x, int y) {
+    // Convert the mouse coordinates from window coordinates to OpenGL coordinates
+    int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    y = windowHeight - y;  // Invert Y coordinate to match OpenGL's coordinate system
+
+    // If the left mouse button is clicked
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // Toggle the road light states (no area check needed)
+        roadLightStatus = 1 - roadLightStatus;
+        roadLight2Status = 1 - roadLight2Status;
+    }
+    glutPostRedisplay();
+}
+
+
+void updateSkyColor(int value) //A101
+{
+    if (transitioning) {
+        // Gradually change the sky color over time
+        for (int i = 0; i < 3; i++) {
+            backgroundColor[i] += (targetBackgroundColor[i] - backgroundColor[i]) * 0.05;  // Smooth step toward target color
+        }
+
+        // If the transition is complete, stop the transition
+        if (fabs(targetBackgroundColor[0] - backgroundColor[0]) < 0.01 &&
+            fabs(targetBackgroundColor[1] - backgroundColor[1]) < 0.01 &&
+            fabs(targetBackgroundColor[2] - backgroundColor[2]) < 0.01) {
+            transitioning = false;
+        }
+    }
+
+    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 0);
+    glutPostRedisplay();
+    glutTimerFunc(50, updateSkyColor, 0);  // Keep updating the color
+}
+
+void transitionToDay() //A102
+{
+    // Set target color for day (light blue sky)
+    targetBackgroundColor[0] = 0.0;
+    targetBackgroundColor[1] = 0.9;
+    targetBackgroundColor[2] = 0.9;
+    transitioning = true;
+    isDay = true;
+}
+
+void transitionToNight() //A103
+{
+    // Set target color for night (dark blue sky)
+    targetBackgroundColor[0] = 0.0;
+    targetBackgroundColor[1] = 0.0;
+    targetBackgroundColor[2] = 0.2;
+    transitioning = true;
+    isDay = false;
+}
+
+
+void keyboard(unsigned char key, int x, int y) {
+    if (key == 'd' || key == 'D') {
+        if (!isDay) {
+            // Transition from night to day
+            transitionToDay();
+        }
+    }
+    else if (key == 'n' || key == 'N') {
+        if (isDay) {
+            // Transition from day to night
+            transitionToNight();
+        }
+    }
+}
+
+//Logic for object-drawing function
+void bushes() //O101
 {
     glColor3ub(0, 90, 0);
     glBegin(GL_POLYGON);
     glVertex2d(-70, -90); //i6
     glVertex2d(-60, -90); //j6
 
-    // 1st Bushes
     glColor3ub(0, 90, 0);
     circle(5.5, 5.5, -70, -85); //S5
     circle(5, 5, -70, -80); //T5
     circle(5.5, 5.5, -60, -85); //V5
     circle(5, 5, -63, -81); //Z5
     circle(4, 4, -60, -77); //A6
+}
 
+void flowers() //O102
+ {
 
-    //flowers
     glColor3ub(255, 0, 203);
     circle(2, 2, -66, -75); //C6
     glColor3ub(255, 0, 100);
@@ -102,7 +214,7 @@ void Bushes()
     circle(2.5, 2.5, -61, -72);
 }
 
-void road()
+void greenary() //O103
 {
     //greenary above road
     glColor3ub(0, 159, 0);
@@ -112,7 +224,10 @@ void road()
     glVertex2d(200, -50);
     glVertex2d(-200, -50);
     glEnd();
+}
 
+void road() //O104
+{
     //car road(pitch)
     glColor3ub(50, 50, 50);
     glBegin(GL_POLYGON);
@@ -121,9 +236,10 @@ void road()
     glVertex2d(200, -100);
     glVertex2d(-200, -100);
     glEnd();
+}
 
-    //white blocks on the road
-    //B1
+ void roadBlock1() //O105
+ {
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(-180, -160);
@@ -131,8 +247,9 @@ void road()
     glVertex2d(-140, -140);
     glVertex2d(-180, -140);
     glEnd();
-
-    //B2
+ }
+void roadBlock2() //O106
+{
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(-120, -160);
@@ -140,8 +257,10 @@ void road()
     glVertex2d(-80, -140);
     glVertex2d(-120, -140);
     glEnd();
+}
 
-    //B3
+ void roadBlock3() //O107
+ {
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(-60, -160);
@@ -149,8 +268,10 @@ void road()
     glVertex2d(-20, -140);
     glVertex2d(-60, -140);
     glEnd();
+ }
 
-    //B4
+ void roadBlock4() //O108
+ {
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(0, -160);
@@ -158,8 +279,10 @@ void road()
     glVertex2d(40, -140);
     glVertex2d(0, -140);
     glEnd();
+ }
 
-    //B5
+void roadBlock5() //O109
+{
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(60, -160);
@@ -167,8 +290,10 @@ void road()
     glVertex2d(100, -140);
     glVertex2d(60, -140);
     glEnd();
+}
 
-    //B6
+void roadBlock6() //O110
+{
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(120, -160);
@@ -176,8 +301,10 @@ void road()
     glVertex2d(160, -140);
     glVertex2d(120, -140);
     glEnd();
+}
 
-    //B7
+void roadBlock7() //O111
+{
     glColor3ub(255, 255, 255);
     glBegin(GL_POLYGON);
     glVertex2d(180, -160);
@@ -187,7 +314,8 @@ void road()
     glEnd();
 }
 
-void buildings() {
+void building1() //O112
+{
     // Building 1 (FROM THE RIGHT)
     glColor3ub(216, 191, 216); // Dark Gray for the building
     glBegin(GL_POLYGON);
@@ -197,8 +325,10 @@ void buildings() {
     glVertex2d(200, 60);//H1
     glVertex2d(200, -50);//M1
     glEnd();
+}
 
-    // Building 2
+void building2() //O113
+{
     glColor3ub(255, 182, 193);
     glBegin(GL_POLYGON);
     glVertex2d(130, -50); //U
@@ -208,8 +338,10 @@ void buildings() {
     glVertex2d(152,38);  //A1
     glVertex2d(152, -50);  //B1
     glEnd();
+}
 
-    // Building 3
+void building3() //O114
+{
     glColor3ub(230, 230, 120);
     glBegin(GL_POLYGON);
     glVertex2d(90, -50);  //Q
@@ -218,8 +350,10 @@ void buildings() {
     glVertex2d(130, -16);  //T
     glVertex2d(130, -50);  //S
     glEnd();
+}
 
-    // Building 4
+void building4() //O115
+{
     glColor3ub(69, 169, 120);
     glBegin(GL_POLYGON);
     glVertex2d(85, -50);
@@ -229,8 +363,10 @@ void buildings() {
     glVertex2d(90, 50);//P
     glVertex2d(90, -50);//Q
     glEnd();
+}
 
-    // Building 5
+void building5() //O116
+{
     glColor3ub(147, 112, 219);
     glBegin(GL_POLYGON);
     glVertex2d(44, -50); //T2
@@ -239,8 +375,10 @@ void buildings() {
     glVertex2d(49, 30);  //E3
     glVertex2d(46.6, 4);  //F3
     glEnd();
+}
 
-    // Building 6
+void building6() //O117
+{
     glColor3ub(255, 182, 193);
     glBegin(GL_POLYGON);
     glVertex2d(-120, -50);//G3
@@ -249,8 +387,10 @@ void buildings() {
     glVertex2d(-60, 40);//J3
     glVertex2d(-60, -50); //V2
     glEnd();
+}
 
-    // Building 7
+void building7() //O118
+{
     glColor3ub(0, 0, 250);
     glBegin(GL_POLYGON);
     glVertex2d(-160, -50);//P3
@@ -258,9 +398,10 @@ void buildings() {
     glVertex2d(-120, 0);//L3
     glVertex2d(-120, -50);//G3
     glEnd();
+}
 
-
-    // Building 8
+void building8() //O119
+{
     glColor3ub(255, 120, 120);
     glBegin(GL_POLYGON);
     glVertex2d(-200, -50);//N1
@@ -269,11 +410,12 @@ void buildings() {
     glVertex2d(-160, 100);//O3
     glVertex2d(-160, -50);//P3
     glEnd();
+
 }
 
 
-void sun() {
-    //new position of the sun using the angle
+void sun() //O120
+{
     float radius = 60.0f;  // Radius of the sun's orbit
     float centerX = 136.0954882378032;  // X-coordinate of the center
     float centerY = 142.3558675319782;  // Y-coordinate of the center
@@ -286,7 +428,8 @@ void sun() {
     circle(22.642, 22.642, sunX, sunY);
 }
 
-void updateSunPosition(int value) {
+void updateSunPosition(int value) //A104
+{
     //sun's angle of rotation (in radians)
     sunAngle += 0.004f;  // for faster or slower rotation
 
@@ -299,7 +442,7 @@ void updateSunPosition(int value) {
     glutTimerFunc(10, updateSunPosition, 0);
 }
 
-void tree()
+void tree1() //O121
 {
     //tree1
     glColor3ub(139, 69, 19);
@@ -317,8 +460,10 @@ void tree()
     circle(14.7, 14.7, 43, -7);//M
     glColor3ub(0, 100, 0);
     circle(12, 12, 58, 4);//V7
+}
 
-    //tree2
+void tree2() //O122
+{
     glColor3ub(75, 50, 25);
     glBegin(GL_POLYGON);
     glVertex2d(40, -50);//T2
@@ -337,9 +482,10 @@ void tree()
     circle(15, 15, 63, -18);//R7
     circle(13, 13, 77, -7);//T7
     circle(9, 9, 75, 6);//Z7
+}
 
-
-    //tree3(near bench)
+void tree3() //O123
+{
     glColor3ub(0, 100, 0); //UP(E7)
     circle(15.5, 15.5, -111, -30);
     glColor3ub(0, 100, 0);
@@ -373,7 +519,7 @@ void tree()
 }
 
 // Timer function to update the cloud's position
-void updateCloudPosition(int value)
+void updateCloudPosition(int value) //A105
 {
     cloudX += 0.3;  // Move clouds to the right by 0.3 units per update
 
@@ -384,21 +530,23 @@ void updateCloudPosition(int value)
     glutTimerFunc(20, updateCloudPosition, 0);
 }
 
-void clouds()
+void cloud1() //O124
 {
     glColor3ub(255, 255, 255);
     circle(14.9, 14.9, cloudX, 160);  // Cloud 1
     circle(14, 14, cloudX + 14, 164);  // Cloud 2
     circle(13.8, 13.8, cloudX + 28, 167);  // Cloud 3
+}
 
+void cloud2() //O125
+{
     glColor3ub(255, 255, 255);
     circle(13, 13, cloudX + 72, 140);  // Cloud 4
     circle(13, 13, cloudX + 84, 137);  // Cloud 5
     circle(12, 12, cloudX + 96, 143);  // Cloud 6
 }
 
-float airplaneX = -200;  // Initial X position of the airplane
-void updateAeroplanePosition(int value)
+void updateAeroplanePosition(int value) //A106
 {
     airplaneX += 2;  // Move the airplane by 2 units per update
 
@@ -409,7 +557,7 @@ void updateAeroplanePosition(int value)
     glutTimerFunc(20, updateAeroplanePosition, 0);
 }
 
-void aeroplane()
+void aeroplane() //O126
 {
     glColor3ub(170, 170, 170);
     glBegin(GL_POLYGON);
@@ -443,7 +591,7 @@ void aeroplane()
     glEnd();
 }
 
-void car()
+void car() //O127
 {
     // Car body
     glColor3ub(255, 0, 0);
@@ -488,7 +636,7 @@ void car()
 }
 
 // Timer function to move the car
-void updateCarPosition(int value)
+void updateCarPosition(int value) //A107
 {
     tx += 3;  // Move the car by 2 units per update
 
@@ -499,7 +647,7 @@ void updateCarPosition(int value)
     glutTimerFunc(40, updateCarPosition, 0);
 }
 
-void truck()
+void truck() //O128
 {
     // Truck body
     glColor3ub(204, 0, 204);
@@ -536,7 +684,7 @@ void truck()
 }
 
 // Timer function to move the truck
-void updateTruckPosition(int value)
+void updateTruckPosition(int value) //A108
 {
     tx += 2;  // Move the truck by 2 units per update
 
@@ -547,13 +695,13 @@ void updateTruckPosition(int value)
     glutTimerFunc(40, updateCarPosition, 0);
 }
 
-int isPointInsideRoadLight(float x, float y, float lightX, float lightY, float radius)
+int isPointInsideRoadLight(float x, float y, float lightX, float lightY, float radius) //A109
 {
     float distance = sqrt((x - lightX) * (x - lightX) + (y - lightY) * (y - lightY));
     return (distance <= radius);
 }
 
-void roadLight()
+void roadLight() //O129
 {
     // Road light pole
     glColor3ub(0, 0, 0);
@@ -582,7 +730,7 @@ void roadLight()
 
 }
 
-void roadLight2()
+void roadLight2() //O130
 {
     // Road light pole 2
     glColor3ub(0, 0, 0);
@@ -610,7 +758,7 @@ void roadLight2()
     circle(7, 7, 167, -33);
 }
 
-void bench()
+void bench() //O131
 {
     // bench
     glColor3ub(139, 69, 19);
@@ -668,6 +816,43 @@ void bench()
 
 }
 
+void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    greenary(); //O103
+    road(); //O104
+    roadBlock1(); //O105
+    roadBlock2(); //O106
+    roadBlock3(); //O107
+    roadBlock4(); //O108
+    roadBlock5(); //O109
+    roadBlock6(); //O110
+    roadBlock7(); //O111
+    sun(); //O120
+    building1(); //O112
+    building2(); //O113
+    building3(); //O114
+    building4(); //O115
+    building5(); //O116
+    building6(); //O117
+    building7(); //O118
+    building8(); //O119
+    tree1(); //O121
+    tree2(); //O122
+    tree3(); //O123
+    bushes(); //O101
+    flowers(); //O102
+    cloud1(); //O124
+    cloud2(); //O125
+    aeroplane(); //O126
+    roadLight(); //O129
+    roadLight2(); //O130
+    bench(); //O131
+    car(); //O127
+    truck(); //O128
+    glFlush();
+}
+
 void init(void) {
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 0);
     glMatrixMode(GL_PROJECTION);
@@ -675,92 +860,6 @@ void init(void) {
 
     glutTimerFunc(10, updateSunPosition, 0);
     glutTimerFunc(50, updateSkyColor, 0);
-}
-
-void updateSkyColor(int value) {
-    if (transitioning) {
-        // Gradually change the sky color over time
-        for (int i = 0; i < 3; i++) {
-            backgroundColor[i] += (targetBackgroundColor[i] - backgroundColor[i]) * 0.05;  // Smooth step toward target color
-        }
-
-        // If the transition is complete, stop the transition
-        if (fabs(targetBackgroundColor[0] - backgroundColor[0]) < 0.01 &&
-            fabs(targetBackgroundColor[1] - backgroundColor[1]) < 0.01 &&
-            fabs(targetBackgroundColor[2] - backgroundColor[2]) < 0.01) {
-            transitioning = false;
-        }
-    }
-
-    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 0);
-    glutPostRedisplay();
-    glutTimerFunc(50, updateSkyColor, 0);  // Keep updating the color
-}
-
-void transitionToDay() {
-    // Set target color for day (light blue sky)
-    targetBackgroundColor[0] = 0.0;
-    targetBackgroundColor[1] = 0.9;
-    targetBackgroundColor[2] = 0.9;
-    transitioning = true;
-    isDay = true;
-}
-
-void transitionToNight() {
-    // Set target color for night (dark blue sky)
-    targetBackgroundColor[0] = 0.0;
-    targetBackgroundColor[1] = 0.0;
-    targetBackgroundColor[2] = 0.2;
-    transitioning = true;
-    isDay = false;
-}
-
-void keyboard(unsigned char key, int x, int y) {
-    if (key == 'd' || key == 'D') {
-        if (!isDay) {
-            // Transition from night to day
-            transitionToDay();
-        }
-    }
-    else if (key == 'n' || key == 'N') {
-        if (isDay) {
-            // Transition from day to night
-            transitionToNight();
-        }
-    }
-}
-
-
-void display(void)
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-    road();
-    sun();
-    buildings();
-    tree();
-    Bushes();
-    clouds();
-    aeroplane();
-    roadLight();
-    roadLight2();
-    bench();
-    car();
-    truck();
-    glFlush();
-}
-
-void mouse(int button, int state, int x, int y) {
-    // Convert the mouse coordinates from window coordinates to OpenGL coordinates
-    int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
-    y = windowHeight - y;  // Invert Y coordinate to match OpenGL's coordinate system
-
-    // If the left mouse button is clicked
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        // Toggle the road light states (no area check needed)
-        roadLightStatus = 1 - roadLightStatus;
-        roadLight2Status = 1 - roadLight2Status;
-    }
-    glutPostRedisplay();
 }
 
 int main(int argc, char** argv)
@@ -773,10 +872,10 @@ int main(int argc, char** argv)
     glutDisplayFunc(display);
     glutMouseFunc(mouse);
     glutKeyboardFunc(keyboard);
-    glutTimerFunc(40, updateCarPosition, 0);
-    glutTimerFunc(40, updateTruckPosition, 0);
-    glutTimerFunc(20, updateCloudPosition, 0);
-    glutTimerFunc(20, updateAeroplanePosition, 0);
+    glutTimerFunc(40, updateCarPosition, 0); //A107
+    glutTimerFunc(40, updateTruckPosition, 0); //A108
+    glutTimerFunc(20, updateCloudPosition, 0); //A105
+    glutTimerFunc(20, updateAeroplanePosition, 0); //A106
     glutMainLoop();
     return 0;
 }
