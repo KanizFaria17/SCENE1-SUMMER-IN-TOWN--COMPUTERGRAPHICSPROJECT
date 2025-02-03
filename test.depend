@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1738436052 source:c:\users\kaniz\onedrive\desktop\test\main.cpp
+1738599035 source:c:\users\kaniz\onedrive\desktop\test\main.cpp
 	<windows.h>
 	<GL/glut.h>
 	<GL/gl.h>

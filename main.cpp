@@ -168,6 +168,7 @@ void transitionToNight() //A103
 }
 
 
+
 void keyboard(unsigned char key, int x, int y) {
     if (key == 'd' || key == 'D') {
         if (!isDay) {
@@ -424,7 +425,13 @@ void sun() //O120
     float sunX = centerX + radius * cos(sunAngle);
     float sunY = centerY + radius * sin(sunAngle);
 
-    glColor3ub(255, 255, 0);
+    // Change the sun color based on whether it's day or night
+    if (isDay) {
+        glColor3ub(255, 255, 0);  // Yellow for day
+    } else {
+        glColor3ub(255, 255, 255);  // White for night
+    }
+
     circle(22.642, 22.642, sunX, sunY);
 }
 
